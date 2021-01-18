@@ -1,3 +1,5 @@
 .vs/
 bin/
 temp/
+external/_build/
+external/_lib/
