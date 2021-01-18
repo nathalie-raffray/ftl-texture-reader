@@ -11,6 +11,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "bc7decomp.cpp"
+
 int main(int argc, char *argv[])
 {
     if (argc != 1)

@@ -96,7 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -113,7 +113,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,7 +147,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
