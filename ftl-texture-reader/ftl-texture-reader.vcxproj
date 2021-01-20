@@ -94,14 +94,15 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external\glad\include;$(FTL_LIBS_PATH)\include;..\external\glfw\include;..\external\bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\external\spdlog\include;$(FTL_LIBS_PATH)\external\oqpi\include;$(FTL_LIBS_PATH)\external\json\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../external/_lib/glfw/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\_lib\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -111,16 +112,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external\glad\include;$(FTL_LIBS_PATH)\include;..\external\glfw\include;..\external\bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\external\spdlog\include;$(FTL_LIBS_PATH)\external\oqpi\include;$(FTL_LIBS_PATH)\external\json\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../external/_lib/glfw/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\_lib\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -128,14 +130,15 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external\glad\include;$(FTL_LIBS_PATH)\include;..\external\glfw\include;..\external\bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\external\spdlog\include;$(FTL_LIBS_PATH)\external\oqpi\include;$(FTL_LIBS_PATH)\external\json\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../external/_lib/glfw/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\_lib\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -145,21 +148,31 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(FTL_LIBS_PATH)\external\spdlog\include;../external/bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\json\include;../external/_lib/glfw/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external\glad\include;$(FTL_LIBS_PATH)\include;..\external\glfw\include;..\external\bc7enc;$(FTL_ENGINE_CORE_PATH)\include;$(FTL_LIBS_PATH)\external\spdlog\include;$(FTL_LIBS_PATH)\external\oqpi\include;$(FTL_LIBS_PATH)\external\json\include;$(FTL_LIBS_PATH)\external\vfs\include;$(FTL_LIBS_PATH)\external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../external/_lib/glfw/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\_lib\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\glad\src\glad.c" />
     <ClCompile Include="..\sources\main.cpp" />
+    <ClCompile Include="..\sources\shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\sources\shaders\fragment.glsl" />
+    <None Include="..\sources\shaders\vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\sources\shader.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
