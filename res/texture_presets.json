@@ -1,0 +1,9 @@
+{
+	"compression":{
+		"format" : "bc3"
+	}, 
+	"mipmaps":{
+		"enabled" :true,
+		"maxLevel":20
+	}
+}

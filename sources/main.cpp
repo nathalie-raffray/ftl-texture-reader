@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "bc7decomp.cpp"
 #define RGBCX_IMPLEMENTATION
@@ -31,19 +32,31 @@ uint64_t getDecompressedSize(const ftl::texture_format format, const uint64_t nu
     switch (format)
     {
     case ftl::texture_format::bc1:
+        return numPixels * 2 * 4; // 4 bytes per pixel im guessing ?
+    case ftl::texture_format::bc3:
+        return numPixels * 4; // 4 bytes per pixel im guessing ?
     case ftl::texture_format::bc4:
-        return numPixels * 2;
+        return numPixels * 2 * 2; // 2 bytes per pixel ??
+    case ftl::texture_format::bc5:
+        return numPixels * 4;
     default:
         return numPixels;
     }
 }
 
 //--------------------------------------------------------------------------------------------------
-GLenum getInternalFormat(const ftl::texture2d_description &textureDescription)
+GLenum getGLFormat(const ftl::texture2d_description &textureDescription)
 {
     // The issue here is that bc7 can be either rgb or rgba. 
+    // Not sure about grayscale formats, bc4 and bc5. 
+    // Check https://stackoverflow.com/questions/680125/can-i-use-a-grayscale-image-with-the-opengl-glteximage2d-function
+    // Will probably need to adapt fragment shader, depending on which format we can expect the texture to be in. 
     switch (textureDescription.format)
     {
+    case ftl::texture_format::bc4:
+        return GL_RED;
+    case ftl::texture_format::bc5:
+        return GL_RG;
     case ftl::texture_format::bc6:
         return GL_RGB;
     default:
@@ -70,22 +83,18 @@ std::pair<uint16_t, uint16_t> getWindowDimensions(const ftl::texture2d_descripti
 }
 
 //---------------------------------------------------------------------------------------------
-void error_callback(int error, const char *description)
+void glfwErrorCallback(int error, const char *description)
 {
     fprintf(stderr, "Error: %s\n", description);
-}
-
-
-//---------------------------------------------------------------------------------------------
-void draw_image()
-{
-
 }
 
 //---------------------------------------------------------------------------------------------
 static void GLClearError()
 {
-    while (glGetError() != GL_NO_ERROR);
+    while (glGetError() != GL_NO_ERROR)
+    {
+
+    }
 }
 
 //---------------------------------------------------------------------------------------------
@@ -133,9 +142,6 @@ unsigned int createShader(const std::string &vertexShader, const std::string &fr
     // if vs == 0, then exit...
     unsigned int fs = compileShader(fragmentShader, GL_FRAGMENT_SHADER);
 
-    // Bind ourTexture to texture unit 0
-    GLCall(glUniform1i(glGetUniformLocation(fs, "ourTexture"), 0));
-
     GLCall(glAttachShader(program, vs));
     GLCall(glAttachShader(program, fs));
     GLCall(glLinkProgram(program));
@@ -163,18 +169,17 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
     auto windowDimensions = getWindowDimensions(textureDescription);
 
     auto vertices = std::vector<float>();
-    auto numVertices = textureDescription.mips.size() * 4;
 
     auto topLeftX = -1.0f;
     auto topLeftY = 1.0f;
 
-    for (auto i = 0; i < textureDescription.mips.size(); ++i)
+    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
     {
         auto currentMip = textureDescription.mips[i];
-        auto mipViewportWidth = (currentMip.dimension.x / windowDimensions.first) * 2;
-        auto mipViewportHeight = (currentMip.dimension.y / windowDimensions.second) * 2;
+        auto mipViewportWidth = (currentMip.dimension.x / (float)windowDimensions.first) * 2;
+        auto mipViewportHeight = (currentMip.dimension.y /(float) windowDimensions.second) * 2;
 
-        // top left
+        // top left:
         //viewport positions
         vertices.push_back(topLeftX);
         vertices.push_back(topLeftY);
@@ -184,7 +189,7 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
         vertices.push_back(0);
         vertices.push_back(1);
 
-        // bottom left
+        // bottom left:
         //viewport positions
         vertices.push_back(topLeftX);
         vertices.push_back(topLeftY - mipViewportHeight);
@@ -192,9 +197,9 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
 
         //texture coords
         vertices.push_back(0);
-        vertices.push_back(1);
+        vertices.push_back(0);
 
-        // top right
+        // top right:
         //viewport positions
         vertices.push_back(topLeftX + mipViewportWidth);
         vertices.push_back(topLeftY);
@@ -204,7 +209,7 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
         vertices.push_back(1);
         vertices.push_back(1);
 
-        // bottom right
+        // bottom right:
         //viewport positions
         vertices.push_back(topLeftX + mipViewportWidth);
         vertices.push_back(topLeftY - mipViewportHeight);
@@ -216,7 +221,8 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
 
         //update topLeftX and topLeftY
         topLeftX += mipViewportWidth;
-        topLeftY /= 2;
+        //topLeftY /= 2;
+        topLeftY = -1.0f + mipViewportHeight / 2;
     }
 
     // Print vertices.
@@ -229,12 +235,12 @@ std::vector<uint32_t> getIndices(const ftl::texture2d_description &textureDescri
     auto indices = std::vector<uint32_t>();
 
     // Something like this:
-    //unsigned int indices[] = { 
+    // unsigned int indices[] = { 
     //    0, 1, 2,   // first triangle
     //    1, 3, 2    // second triangle
-    //};
+    // };
 
-    for (auto i = 0; i < textureDescription.mips.size(); ++i)
+    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
     {
         // For each mip, push 6 indices (for two triangles)
         auto firstIndex = i * 4;
@@ -253,18 +259,17 @@ std::vector<uint32_t> getIndices(const ftl::texture2d_description &textureDescri
 //---------------------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    if (argc != 1)
+    if (argc != 2)
     {
         std::cout << "Wrong number of arguments." << std::endl;
+        std::cout << "Number of arguments found: " << argc << std::endl;
         return -1;
     }
     
-    auto textureUUID = ftl::uuid(argv[0]);
-
-    // Read all mip payloads w/its description.B
+    auto textureUUID = ftl::uuid(argv[1]);
 
     // Get description. 
-    auto descFilePath = "texture.description." + textureUUID.toString();
+    auto descFilePath = "C:/Dev/3dverse-experiments/ftl-texture-reader/res/desc.texture." + textureUUID.toString();
     auto spFile = vfs::open_read_only(descFilePath, vfs::file_creation_options::open_if_existing);
 
     if (!spFile || !spFile->isValid())
@@ -275,16 +280,21 @@ int main(int argc, char *argv[])
 
     auto textureDescription = ftl::texture2d_description();
 
+    auto jStr = std::string();
+    auto descFileSize = spFile->size();
+    jStr.resize(descFileSize);
+    spFile->read(jStr);
+    
     try
     {
-        auto jStr = std::string();
-        spFile->read(jStr);
         auto j = nlohmann::json::parse(jStr);
         textureDescription = j;
     }
     catch (nlohmann::json::exception e)
     {
         std::cout << "Error in parsing description: " << e.what() << std::endl;
+        std::cout << "What was found in the file: " << std::endl;
+        std::cout << jStr << std::endl;
         return -1;
     }
 
@@ -295,7 +305,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    glfwSetErrorCallback(error_callback);
+    glfwSetErrorCallback(glfwErrorCallback);
 
     // Make window
     auto dimensions = getWindowDimensions(textureDescription);
@@ -310,6 +320,13 @@ int main(int argc, char *argv[])
 
     // Make context.
     glfwMakeContextCurrent(window);
+
+    // Initialize glad.
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
 
     // Clear screen. 
     GLCall(glClear(GL_COLOR_BUFFER_BIT));
@@ -327,15 +344,18 @@ int main(int argc, char *argv[])
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     
-    for (auto i = 0; i < textureDescription.mips.size(); ++i)
+    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
     {
         // Get mip payload. 
-        auto payloadFilePath = "texture.payload.mip" + i + std::string(".") + textureUUID.toString();
+        std::stringstream num;
+        num << i;
+        auto payloadFilePath = "C:/Dev/3dverse-experiments/ftl-texture-reader/res/payload.texture.mip" + num.str() + std::string(".") + textureUUID.toString();
         auto spFileView = vfs::open_read_only_view(payloadFilePath, vfs::file_creation_options::open_if_existing);
 
         if (!spFileView || !spFileView->isValid())
         {
             std::cout << "Could not open payload." << std::endl;
+            std::cout << "Payload file path: " << payloadFilePath << std::endl;
             glfwDestroyWindow(window);
             glfwTerminate();
             return -1;
@@ -370,15 +390,16 @@ int main(int argc, char *argv[])
             break;
         }
 
-        // rgb ? rgba ?
         // https://learnopengl.com/Getting-started/Textures
         // Set each mip map level manually. 
         // i corresponds to mip level.
-        GLCall(glTexImage2D(GL_TEXTURE_2D, i, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pPixels.data()));
+        auto glFormat = getGLFormat(textureDescription);
+        GLCall(glTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pPixels.data()));
+        //GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, textureDescription.payloadTotalSize, spFileView->cursor<void>()));
     }
 
     std::string vertexShader =
-        "#version 330"
+        "#version 330 core\n"
         "layout(location = 0) in vec3 aPos;\n"
         "layout(location = 1) in vec2 aTexCoords;\n"
         "\n"
@@ -391,7 +412,7 @@ int main(int argc, char *argv[])
         "}";
 
     std::string fragmentShader =
-        "#version 330"
+        "#version 330 core\n"
         "out vec4 FragColor;\n"
         "in vec2 texCoords;\n"
         "\n"
@@ -404,6 +425,9 @@ int main(int argc, char *argv[])
 
     auto program = createShader(vertexShader, fragmentShader);
     GLCall(glUseProgram(program));
+
+    // Bind ourTexture to texture unit 0
+    GLCall(glUniform1i(glGetUniformLocation(program, "ourTexture"), 0));
 
     //float vertices[] = {
     //    // positions         // texture coords
@@ -420,6 +444,20 @@ int main(int argc, char *argv[])
 
     auto vertices = getVertices(textureDescription);
     auto indices = getIndices(textureDescription);
+
+    std::cout << "vertices : " << std::endl;
+    for (auto i = 0; i < vertices.size(); ++i)
+    {
+        if (i % 5 == 0)std::cout << std::endl;
+        std::cout << vertices[i] << ", ";
+    }
+    std::cout << std::endl << "indices : " << std::endl;
+    for (auto i = 0; i < indices.size(); ++i)
+    {
+        if (i % 3 == 0) std::cout << std::endl;
+        std::cout << indices[i] << ", ";
+    }
+    std::cout << std::endl;
 
     //Core OpenGL requires that we use a VAO so it knows what to do with our vertex inputs. If we fail to bind a VAO, OpenGL will most likely refuse to draw anything. 
     unsigned int VAO;
@@ -447,10 +485,16 @@ int main(int argc, char *argv[])
     //GLCall(glBindVertexArray(VAO));
     //GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
 
-   // change this 6 at a point.
-    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    //GLCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
+    GLCall(glActiveTexture(GL_TEXTURE0));
 
-    while (!glfwWindowShouldClose(window));
+    while (!glfwWindowShouldClose(window))
+    {
+        GLCall(glClear(GL_COLOR_BUFFER_BIT));
+        GLCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 
     // Exit.
     GLCall(glDeleteProgram(program));
