@@ -109,6 +109,41 @@ GLenum getGLFormat(const ftl::texture2d_description &textureDescription)
 }
 
 //--------------------------------------------------------------------------------------------------
+GLenum getGLFormatCompressed(const ftl::texture2d_description &textureDescription)
+{
+    // The issue here is that bc7 can be either rgb or rgba. 
+    // Not sure about grayscale formats, bc4 and bc5. 
+    // Check https://stackoverflow.com/questions/680125/can-i-use-a-grayscale-image-with-the-opengl-glteximage2d-function
+    // Will probably need to adapt fragment shader, depending on which format we can expect the texture to be in. 
+    switch (textureDescription.format)
+    {
+    case ftl::texture_format::bc1:
+        // There is also GL_COMPRESSED_RGB_S3TC_DXT1_EXT if there is no alpha channel. 
+        return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+    case ftl::texture_format::bc2:
+        // Get fucked.
+        __debugbreak;
+    case ftl::texture_format::bc3:
+        return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+    case ftl::texture_format::bc4:
+        std::cout << "Doesnt support bc4 yet." << std::endl;
+        __debugbreak;
+    case ftl::texture_format::bc5:
+        std::cout << "Doesnt support bc5 yet." << std::endl;
+        __debugbreak;
+    case ftl::texture_format::bc6:
+        return GL_RG;
+        std::cout << "Doesnt support bc6 yet." << std::endl;
+        __debugbreak;
+    case ftl::texture_format::bc7:
+        std::cout << "Doesnt support bc7 yet." << std::endl;
+        __debugbreak;
+    }
+
+    return GL_INVALID_ENUM;
+}
+
+//--------------------------------------------------------------------------------------------------
 std::pair<uint16_t, uint16_t> getWindowDimensions(const ftl::texture2d_description &textureDescription)
 {
     auto dimensions = std::pair<uint16_t, uint16_t>();
@@ -445,70 +480,8 @@ int main(int argc, char *argv[])
 
     rgbcx::bc1_approx_mode bc1_mode = rgbcx::bc1_approx_mode::cBC1Ideal;
 
-    //image_u8 unpacked_image(source_image.width(), source_image.height());
-
-    const uint32_t blocks_x = width / 4;
-    const uint32_t blocks_y = height / 4;
-    //NOTE THIS WONT WORK WITH BC1 AND BC4
-    const auto bytes_per_block = 16;
-    
-    bool punchthrough_flag = false;
-    for (uint32_t by = 0; by < blocks_y; by++)
-    {
-        for (uint32_t bx = 0; bx < blocks_x; bx++)
-        {
-            void *pBlock = (bytes_per_block == 16) ? (void *)(spFileView->cursor<uint16_t>() + (bx + by * (uint64_t)blocks_x)) : (void *)(spFileView->cursor<uint8_t>() + (bx + by * (uint64_t)blocks_x));
-
-            color_quad_u8 unpacked_pixels[16];
-            for (uint32_t i = 0; i < 16; i++)
-                unpacked_pixels[i].set(0, 0, 0, 255);
-
-            switch (textureDescription.format)
-            {
-            case ftl::texture_format::bc1:
-                //rgbcx::unpack_bc1(pBlock, unpacked_pixels, true, bc1_mode);
-                rgbcx::unpack_bc1(pBlock, unpacked_pixels);
-                break;
-            case ftl::texture_format::bc3:
-                rgbcx::unpack_bc3(pBlock, unpacked_pixels);
-                //if (!rgbcx::unpack_bc3(pBlock, unpacked_pixels, bc1_mode))
-                    //punchthrough_flag = true;
-                break;
-            case ftl::texture_format::bc4:
-                rgbcx::unpack_bc4(pBlock, &unpacked_pixels[0][0], 4);
-                break;
-            case ftl::texture_format::bc5:
-                rgbcx::unpack_bc5(pBlock, &unpacked_pixels[0][0], 0, 1, 4);
-                break;
-            case ftl::texture_format::bc7:
-                std::cout << "Can't decode bc7 yet." << std::endl;
-                glfwDestroyWindow(window);
-                glfwTerminate();
-                return -1;
-                //bc7decomp::unpack_bc7((const uint8_t *)pBlock, (bc7decomp::color_rgba *)unpacked_pixels);
-                break;
-            default:
-                assert(0);
-                break;
-            }
-            //unpacked_image.set_block(bx, by, 4, 4, unpacked_pixels);
-            //assert((bx * width + width) <= m_width);
-            //assert((by * height + height) <= m_height);
-
-            auto bytesPerPixel = 4;
-
-            for (uint32_t y = 0; y < 4; y++)
-                memcpy(pPixels.data() + (((uint64_t)by * 4  + y) * (width * (uint64_t)bytesPerPixel) + (uint64_t)bx * bytesPerPixel * 4), unpacked_pixels + (uint64_t)y * 4, 4 * sizeof(color_quad_u8));
-                //uint8_t *pPixel = pPixels + ((uint64_t)width * numChannels) * (((uint64_t)by * 4) + (i / 4)) + ((uint64_t)bx * 4 * numChannels) + ((i % 4) * numChannels);
-                //memcpy(pPixels.data() + (bx * 4, by * 4 + y), unpacked_pixels + y * 4, 4 * sizeof(color_quad_u8));
-        } // bx
-    } // by
-    
-    //auto glFormat = getGLFormat(textureDescription);
-    //GLCall(glTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pPixels.data()));
-    //GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-
-    GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, textureDescription.mips[i].payloadSize, spFileView->cursor<void>()));
+    auto glInternalFormat = getGLFormatCompressed(textureDescription);
+    GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, glInternalFormat, width, height, 0, textureDescription.mips[i].payloadSize, spFileView->cursor<void>()));
     GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
 
