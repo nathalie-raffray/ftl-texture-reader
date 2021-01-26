@@ -1,0 +1,24 @@
+{
+  "format": 8,
+  "mips": [
+    {
+      "dimension": [
+        600,
+        600,
+        1
+      ],
+      "payloadSize": 360000
+    },
+    {
+      "dimension": [
+        300,
+        300,
+        1
+      ],
+      "payloadSize": 90000
+    }
+  ],
+  "name": "devjames.png",
+  "payloadTotalSize": 450000,
+  "uuid": "1db76a0e-9b85-4f4a-a7d0-2e049833f398"
+}

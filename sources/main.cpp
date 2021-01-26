@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "glad/glad.h"
 
 #include "glfw/glfw3.h"
@@ -25,6 +27,48 @@
 #define GLCall(x) GLClearError();\
     x;\
     ASSERT(GLLogCall(#x, __FILE__, __LINE__));
+
+#pragma warning(disable:4996)
+
+//--------------------------------------------------------------------------------------------------
+struct color_quad_u8
+{
+    uint8_t m_c[4];
+
+    inline color_quad_u8(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+    {
+        set(r, g, b, a);
+    }
+
+    inline color_quad_u8(uint8_t y = 0, uint8_t a = 255)
+    {
+        set(y, a);
+    }
+
+    inline color_quad_u8 &set(uint8_t y, uint8_t a = 255)
+    {
+        m_c[0] = y;
+        m_c[1] = y;
+        m_c[2] = y;
+        m_c[3] = a;
+        return *this;
+    }
+
+    inline color_quad_u8 &set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+    {
+        m_c[0] = r;
+        m_c[1] = g;
+        m_c[2] = b;
+        m_c[3] = a;
+        return *this;
+    }
+
+    inline uint8_t &operator[] (uint32_t i) { assert(i < 4);  return m_c[i]; }
+    inline uint8_t operator[] (uint32_t i) const { assert(i < 4); return m_c[i]; }
+
+    inline int get_luma() const { return (13938U * m_c[0] + 46869U * m_c[1] + 4729U * m_c[2] + 32768U) >> 16U; } // REC709 weightings
+};
+typedef std::vector<color_quad_u8> color_quad_u8_vec;
 
 //--------------------------------------------------------------------------------------------------
 uint64_t getDecompressedSize(const ftl::texture_format format, const uint64_t numPixels)
@@ -93,7 +137,6 @@ static void GLClearError()
 {
     while (glGetError() != GL_NO_ERROR)
     {
-
     }
 }
 
@@ -160,10 +203,10 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
     // Something like this.
     //float vertices[] = {
     //    // positions         // texture coords
-    //     0.0f,  1.0f, 0.0f,   1.0f, 1.0f,   // top right
-    //     0.0f, -1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-    //    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,   // bottom left
     //    -1.0f,  1.0f, 0.0f,   0.0f, 1.0f    // top left 
+    //    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,   // bottom left
+    //     1.0f,  1.0f, 0.0f,   1.0f, 1.0f,   // top right
+    //     1.0f, -1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
     //};
 
     auto windowDimensions = getWindowDimensions(textureDescription);
@@ -173,7 +216,9 @@ std::vector<float> getVertices(const ftl::texture2d_description &textureDescript
     auto topLeftX = -1.0f;
     auto topLeftY = 1.0f;
 
-    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
+    auto numMips = std::min(1, (int)textureDescription.mips.size());
+
+    for (auto i = 0; i < numMips; ++i)
     {
         auto currentMip = textureDescription.mips[i];
         auto mipViewportWidth = (currentMip.dimension.x / (float)windowDimensions.first) * 2;
@@ -240,7 +285,9 @@ std::vector<uint32_t> getIndices(const ftl::texture2d_description &textureDescri
     //    1, 3, 2    // second triangle
     // };
 
-    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
+    auto numMips = std::min(1, (int)textureDescription.mips.size());
+
+    for (auto i = 0; i < numMips; ++i)
     {
         // For each mip, push 6 indices (for two triangles)
         auto firstIndex = i * 4;
@@ -339,12 +386,169 @@ int main(int argc, char *argv[])
     GLCall(glBindTexture(GL_TEXTURE_2D, texture));
 
     // set the texture wrapping/filtering options (on the currently bound texture object)
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+
+    /*int i;
+    FILE *f = fopen("C:/Users/natha/Downloads/ily.bmp", "rb");
+    unsigned char info[54];
+
+    // read the 54-byte header
+    fread(info, sizeof(unsigned char), 54, f);
+
+    // extract image height and width from header
+    int width = *(int *)&info[18];
+    int height = *(int *)&info[22];
+
+    // allocate 3 bytes per pixel
+    int size = 3 * width * height;
+    unsigned char *data = new unsigned char[size];
+
+    // read the rest of the data at once
+    fread(data, sizeof(unsigned char), size, f);
+    fclose(f);
+
+    for (i = 0; i < size; i += 3)
+    {
+        // flip the order of every 3 bytes
+        unsigned char tmp = data[i];
+        data[i] = data[i + 2];
+        data[i + 2] = tmp;
+    }
+
+    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
+    GLCall(glGenerateMipmap(GL_TEXTURE_2D));*/
+
+    // Get mip payload. 
+    int i = 0;
+    std::stringstream num;
+    num << i;
+    auto payloadFilePath = "C:/Dev/3dverse-experiments/ftl-texture-reader/res/payload.texture.mip" + num.str() + std::string(".") + textureUUID.toString();
+    auto spFileView = vfs::open_read_only_view(payloadFilePath, vfs::file_creation_options::open_if_existing);
+
+    if (!spFileView || !spFileView->isValid())
+    {
+        std::cout << "Could not open payload." << std::endl;
+        std::cout << "Payload file path: " << payloadFilePath << std::endl;
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return -1;
+    }
+
+    std::vector<uint8_t> pPixels;
+    auto width = textureDescription.mips[i].dimension[0];
+    auto height = textureDescription.mips[i].dimension[1];
+
+    pPixels.resize(getDecompressedSize(textureDescription.format, height * width));
+
+    rgbcx::bc1_approx_mode bc1_mode = rgbcx::bc1_approx_mode::cBC1Ideal;
+
+    //image_u8 unpacked_image(source_image.width(), source_image.height());
+
+    const uint32_t blocks_x = width / 4;
+    const uint32_t blocks_y = height / 4;
+    //NOTE THIS WONT WORK WITH BC1 AND BC4
+    const auto bytes_per_block = 16;
     
-    for (auto i = 0; i < 8/*textureDescription.mips.size()*/; ++i)
+    bool punchthrough_flag = false;
+    for (uint32_t by = 0; by < blocks_y; by++)
+    {
+        for (uint32_t bx = 0; bx < blocks_x; bx++)
+        {
+            void *pBlock = (bytes_per_block == 16) ? (void *)(spFileView->cursor<uint16_t>() + (bx + by * (uint64_t)blocks_x)) : (void *)(spFileView->cursor<uint8_t>() + (bx + by * (uint64_t)blocks_x));
+
+            color_quad_u8 unpacked_pixels[16];
+            for (uint32_t i = 0; i < 16; i++)
+                unpacked_pixels[i].set(0, 0, 0, 255);
+
+            switch (textureDescription.format)
+            {
+            case ftl::texture_format::bc1:
+                //rgbcx::unpack_bc1(pBlock, unpacked_pixels, true, bc1_mode);
+                rgbcx::unpack_bc1(pBlock, unpacked_pixels);
+                break;
+            case ftl::texture_format::bc3:
+                rgbcx::unpack_bc3(pBlock, unpacked_pixels);
+                //if (!rgbcx::unpack_bc3(pBlock, unpacked_pixels, bc1_mode))
+                    //punchthrough_flag = true;
+                break;
+            case ftl::texture_format::bc4:
+                rgbcx::unpack_bc4(pBlock, &unpacked_pixels[0][0], 4);
+                break;
+            case ftl::texture_format::bc5:
+                rgbcx::unpack_bc5(pBlock, &unpacked_pixels[0][0], 0, 1, 4);
+                break;
+            case ftl::texture_format::bc7:
+                std::cout << "Can't decode bc7 yet." << std::endl;
+                glfwDestroyWindow(window);
+                glfwTerminate();
+                return -1;
+                //bc7decomp::unpack_bc7((const uint8_t *)pBlock, (bc7decomp::color_rgba *)unpacked_pixels);
+                break;
+            default:
+                assert(0);
+                break;
+            }
+            //unpacked_image.set_block(bx, by, 4, 4, unpacked_pixels);
+            //assert((bx * width + width) <= m_width);
+            //assert((by * height + height) <= m_height);
+
+            auto bytesPerPixel = 4;
+
+            for (uint32_t y = 0; y < 4; y++)
+                memcpy(pPixels.data() + (((uint64_t)by * 4  + y) * (width * (uint64_t)bytesPerPixel) + (uint64_t)bx * bytesPerPixel * 4), unpacked_pixels + (uint64_t)y * 4, 4 * sizeof(color_quad_u8));
+                //uint8_t *pPixel = pPixels + ((uint64_t)width * numChannels) * (((uint64_t)by * 4) + (i / 4)) + ((uint64_t)bx * 4 * numChannels) + ((i % 4) * numChannels);
+                //memcpy(pPixels.data() + (bx * 4, by * 4 + y), unpacked_pixels + y * 4, 4 * sizeof(color_quad_u8));
+        } // bx
+    } // by
+    
+    //auto glFormat = getGLFormat(textureDescription);
+    //GLCall(glTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pPixels.data()));
+    //GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+
+    GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, textureDescription.mips[i].payloadSize, spFileView->cursor<void>()));
+    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+
+
+    // Need to specify mode for bc7.
+   /* switch (textureDescription.format)
+    {
+    case ftl::texture_format::bc1:
+        rgbcx::unpack_bc1(spFileView->cursor<void>(), (void *)pPixels.data());
+        break;
+    case ftl::texture_format::bc3:
+        rgbcx::unpack_bc3(spFileView->cursor<void>(), (void *)pPixels.data());
+        break;
+    case ftl::texture_format::bc4:
+        rgbcx::unpack_bc4(spFileView->cursor<void>(), pPixels.data());
+        break;
+    case ftl::texture_format::bc5:
+        rgbcx::unpack_bc5(spFileView->cursor<void>(), (void *)pPixels.data());
+        break;
+    case ftl::texture_format::bc7:
+        std::cout << "Can't decode bc7 yet." << std::endl;
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return -1;
+        break;
+    }*/
+    
+    //auto outputFilePath = "C:/Dev/3dverse-experiments/ftl-texture-reader/res/output/payload.texture.mip" + num.str() + std::string(".") + textureUUID.toString();
+    //auto spOutputFileView = vfs::open_read_only_view(outputFilePath, vfs::file_creation_options::create_if_nonexisting);
+
+    //spOutputFileView->write(pPixels.data(), pPixels.size());
+
+    // https://learnopengl.com/Getting-started/Textures
+    // Set each mip map level manually. 
+    // i corresponds to mip level.
+    /*auto glFormat = getGLFormat(textureDescription);
+    GLCall(glTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pPixels.data()));
+    GLCall(glGenerateMipmap(GL_TEXTURE_2D));*/
+    //GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, textureDescription.payloadTotalSize, spFileView->cursor<void>()));
+
+    /*for (auto i = 0; i < 8; ++i)
     {
         // Get mip payload. 
         std::stringstream num;
@@ -360,7 +564,7 @@ int main(int argc, char *argv[])
             glfwTerminate();
             return -1;
         }
-
+        
         std::vector<uint8_t> pPixels;
         auto width = textureDescription.mips[i].dimension[0];
         auto height = textureDescription.mips[i].dimension[1];
@@ -390,13 +594,18 @@ int main(int argc, char *argv[])
             break;
         }
 
+        //auto outputFilePath = "C:/Dev/3dverse-experiments/ftl-texture-reader/res/output/payload.texture.mip" + num.str() + std::string(".") + textureUUID.toString();
+        //auto spOutputFileView = vfs::open_read_only_view(outputFilePath, vfs::file_creation_options::create_if_nonexisting);
+
+        //spOutputFileView->write(pPixels.data(), pPixels.size());
+
         // https://learnopengl.com/Getting-started/Textures
         // Set each mip map level manually. 
         // i corresponds to mip level.
         auto glFormat = getGLFormat(textureDescription);
         GLCall(glTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pPixels.data()));
         //GLCall(glCompressedTexImage2D(GL_TEXTURE_2D, i, glFormat, width, height, 0, textureDescription.payloadTotalSize, spFileView->cursor<void>()));
-    }
+    }*/
 
     std::string vertexShader =
         "#version 330 core\n"
@@ -421,11 +630,13 @@ int main(int argc, char *argv[])
         "void main()\n"
         "{\n"
         "FragColor = texture(ourTexture, texCoords);\n"
+        "//FragColor = vec4(1, 0, 0, 1);\n"
         "}";
 
     auto program = createShader(vertexShader, fragmentShader);
     GLCall(glUseProgram(program));
 
+    GLCall(glActiveTexture(GL_TEXTURE0));
     // Bind ourTexture to texture unit 0
     GLCall(glUniform1i(glGetUniformLocation(program, "ourTexture"), 0));
 

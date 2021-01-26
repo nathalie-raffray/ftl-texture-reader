@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>695ae4a9-4fcf-47d2-8801-b9448a30a571</LocalDebuggerCommandArguments>
-    <RemoteDebuggerCommandArguments>695ae4a9-4fcf-47d2-8801-b9448a30a571</RemoteDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>1db76a0e-9b85-4f4a-a7d0-2e049833f398</LocalDebuggerCommandArguments>
+    <RemoteDebuggerCommandArguments>1db76a0e-9b85-4f4a-a7d0-2e049833f398</RemoteDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
